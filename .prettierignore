@@ -1,0 +1,9 @@
+*.py
+*.pyc
+*.json
+*.md
+venv/
+migrations/
+static/
+media/
+*.sqlite3
