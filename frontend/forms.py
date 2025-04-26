@@ -5,7 +5,12 @@ from api.models import HealthProgram, Client, Enrollment
 class HealthProgramForm(forms.ModelForm):
     class Meta:
         model = HealthProgram
-        fields = ['name']
+        fields = ['name', 'description',]
+        widgets = {
+            'name':forms.TextInput(attrs={'class':'form-control'}),
+            'description': forms.Textarea(attrs={'rows': 3,'class':'form-control'}),
+        }
+
 
 class ClientForm(forms.ModelForm):
     class Meta:

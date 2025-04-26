@@ -1,0 +1,20 @@
+{% extends 'frontend/base_generic.html' %}
+
+{% block title %}Confirm Delete Client{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Delete Client</h1>
+
+<p>Are you sure you want to delete "{{ client.full_name}}"?</p>
+<p>Once a Client is deleted you can never add them again</p>
+<p>It will require an Admin to restore the client </p>
+<form method="post">
+    {% csrf_token %}
+    <button type="submit">Confirm Delete</button>
+</form>
+
+<a href="{% url 'frontend:client_list' %}">Cancel</a>
+
+</div>
+{% endblock %}

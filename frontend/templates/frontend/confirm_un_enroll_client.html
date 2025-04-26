@@ -1,0 +1,19 @@
+{% extends 'frontend/base_generic.html' %}
+
+{% block title %}Confirm Un-Enroll Client{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Un-Enroll Client</h1>
+
+<p>Are you sure you want to un enroll "{{ enrollment.client.full_name}}"?</p>
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit">Confirm un-enroll</button>
+</form>
+
+<a href="{% url 'frontend:client_list' %}">Cancel</a>
+
+</div>
+{% endblock %}

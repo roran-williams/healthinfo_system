@@ -3,8 +3,10 @@
 
 {% block title %}Client Profile{% endblock %}
 
+
 {% block content %}
-<div class="container mt-5">
+<div class="container mt-3">
+
     <h2 class="mb-4">Client Profile</h2>
 
     <div class="card mb-4">
@@ -24,12 +26,16 @@
             {% for enrollment in enrollments %}
                 <li class="list-group-item d-flex justify-content-between align-items-center">
                     {{ enrollment.program.name }}
-                    <span class="badge bg-secondary">Enrolled on {{ enrollment.date_enrolled }}</span>
+                    <span class="badge bg-info">Enrolled on {{ enrollment.date_enrolled }}</span>
+                    <span class="badge bg-danger "><a class="text-white text-decoration-none" href="{% url 'frontend:un_enroll_client' enrollment.id %}">un enroll</a></span> |
                 </li>
             {% endfor %}
         </ul>
     {% else %}
-        <div class="alert alert-info">This client is not enrolled in any program yet.</div>
+        <div class="alert alert-info">This client is not enrolled in any program yet.
+            <a href="{% url 'frontend:enroll_client' %}">Enroll Here</a>
+        </div>
+        
     {% endif %}
 </div>
 {% endblock %}
