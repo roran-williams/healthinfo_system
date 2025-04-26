@@ -1,54 +1,101 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="light">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}My Health Program App{% endblock %}</title>
-    
-    <!-- Include Bootstrap CSS -->
-    <link href="{% static 'bootstrap/bootstrap.min.css' %}" rel="stylesheet">
+    <title>Health Info System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <!-- Include any other CSS or JS files -->
-    {% block extra_head %}{% endblock %}
+    <!-- Bootstrap CSS -->
+    <link href="{% static '/bootstrap/bootstrap.min.css' %}" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Optional: Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
 <body>
-    <div class="container">
-        <!-- Navbar -->
-        <nav class="navbar navbar-expand-lg navbar-light bg-light">
-            <a class="navbar-brand" href="/">HealthInfo</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">HealthInfo <i class="bi bi-heart-pulse"></i></a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" 
+                    data-bs-target="#navbarNav" aria-controls="navbarNav" 
+                    aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
+
+            <div class="collapse navbar-collapse justify-content-between" id="navbarNav">
                 <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="{% url 'frontend:health_program_list' %}">Programs</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'frontend:create_health_program' %}">Create Program</a>
-                    </li>
-                    <!-- Add more links here -->
+                    <li class="nav-item"><a class="nav-link" href="{% url 'frontend:health_program_list' %}"><i class="bi bi-list-ul"></i> Programs</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'frontend:register_client' %}"><i class="bi bi-person-plus"></i> Register Client</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'frontend:client_list' %}"><i class="bi bi-people"></i> Clients</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'frontend:enroll_client' %}"><i class="bi bi-pencil-square"></i> Enroll</a></li>
                 </ul>
+                <button id="themeToggleBtn" class="btn btn-outline-light btn-sm" title="Toggle Dark Mode">
+                    <i id="themeIcon" class="bi bi-moon-fill"></i>
+                </button>
             </div>
-        </nav>
-
-        <!-- Main Content Block -->
-        <div class="content">
-            {% block content %}
-            {% endblock %}
         </div>
+    </nav>
 
-        <!-- Footer -->
-        <footer class="text-center mt-5">
-            <p>&copy; 2025 HealthInfo. All Rights Reserved.</p>
-        </footer>
+    <!-- Messages -->
+    <div class="container">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
     </div>
 
-    <!-- Include Bootstrap JS -->
-    <script src="{% static 'bootstrap/bootstrap.bundle.min.js' %}"></script>
-    
-    <!-- Add any other JavaScript here -->
-    {% block extra_js %}{% endblock %}
+    <!-- Page Content -->
+    <div class="container mb-5">
+        {% block content %}
+        {% endblock %}
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white text-center py-3 fixed-bottom">
+        <div class="container">
+            <small>&copy; 2025 HealthInfo System. All rights reserved.</small>
+        </div>
+    </footer>
+
+    <!-- Bootstrap Bundle JS -->
+    <script src="{% static 'bootstrap/bootstrap.bundle.min.js'%}"></script>
+
+    <!-- Dark Mode Toggle Script -->
+    <script>
+        const themeToggleBtn = document.getElementById('themeToggleBtn');
+        const themeIcon = document.getElementById('themeIcon');
+        const htmlTag = document.documentElement;
+
+        function updateThemeIcon() {
+            if (htmlTag.getAttribute('data-bs-theme') === 'dark') {
+                themeIcon.classList.replace('bi-moon-fill', 'bi-sun-fill');
+            } else {
+                themeIcon.classList.replace('bi-sun-fill', 'bi-moon-fill');
+            }
+        }
+
+        function toggleTheme() {
+            const currentTheme = htmlTag.getAttribute('data-bs-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            htmlTag.setAttribute('data-bs-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon();
+        }
+
+        // On load, apply saved theme
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        htmlTag.setAttribute('data-bs-theme', savedTheme);
+        updateThemeIcon();
+
+        themeToggleBtn.addEventListener('click', toggleTheme);
+    </script>
 </body>
 </html>

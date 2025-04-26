@@ -1,0 +1,41 @@
+{% extends "frontend/base_generic.html" %}
+{% load static %}
+
+{% block title %}Client List{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">Registered Clients</h2>
+
+    {% if clients %}
+        <table class="table table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Full Name</th>
+                    <th>National ID</th>
+                    <th>Date of Birth</th>
+                    <th>Contact</th>
+                    <th>View Profile</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for client in clients %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ client.full_name }}</td>
+                        <td>{{ client.national_id }}</td>
+                        <td>{{ client.date_of_birth }}</td>
+                        <td>{{ client.contact }}</td>
+                        <td>
+                            <a href="{% url 'frontend:client_detail' client.id %}" class="btn btn-sm btn-primary">View</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="alert alert-warning">No clients registered yet.</div>
+    {% endif %}
+</div>
+{% endblock %}

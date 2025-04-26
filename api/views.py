@@ -2,8 +2,6 @@ from django.shortcuts import render
 from rest_framework import generics
 from .models import HealthProgram, Client, Enrollment
 from .serializers import *
-
-# Create your views here.
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes

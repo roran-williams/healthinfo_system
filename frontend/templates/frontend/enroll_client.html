@@ -1,0 +1,33 @@
+{% extends "frontend/base_generic.html" %}
+{% load static %}
+
+{% block title %}Enroll Client{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">Enroll Client in a Health Program</h2>
+    <form method="post" class="card p-4 shadow-sm">
+        {% csrf_token %}
+
+        <div class="mb-3">
+            <label for="client" class="form-label">Client</label>
+            <select name="client" id="client" class="form-select">
+                {% for client in clients %}
+                    <option value="{{ client.id }}">{{ client.full_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="program" class="form-label">Health Program</label>
+            <select name="program" id="program" class="form-select">
+                {% for program in programs %}
+                    <option value="{{ program.id }}">{{ program.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-success">Enroll</button>
+    </form>
+</div>
+{% endblock %}

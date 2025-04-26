@@ -1,6 +1,3 @@
-from django.shortcuts import render
-
-# Create your views here.
 # frontend/views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from api.models import HealthProgram, Client, Enrollment
@@ -37,11 +34,14 @@ def client_list(request):
     return render(request, 'frontend/client_list.html', {'clients': clients})
 
 def client_detail(request, client_id):
+    enrollments = Enrollment.objects.all()
     client = get_object_or_404(Client, id=client_id)
-    return render(request, 'frontend/client_detail.html', {'client': client})
+    return render(request, 'frontend/client_detail.html', {'client': client,'enrollments':enrollments})
 
 # Enrollment Views
 def enroll_client(request):
+    clients = Client.objects.all()
+    programs = HealthProgram.objects.all()
     if request.method == 'POST':
         form = EnrollmentForm(request.POST)
         if form.is_valid():
@@ -49,4 +49,4 @@ def enroll_client(request):
             return redirect('frontend:client_list')
     else:
         form = EnrollmentForm()
-    return render(request, 'frontend/enroll_client.html', {'form': form})
+    return render(request, 'frontend/enroll_client.html', {'form': form, 'clients':clients, 'programs':programs})
