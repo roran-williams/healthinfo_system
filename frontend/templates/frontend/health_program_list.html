@@ -1,0 +1,38 @@
+{% extends 'frontend/base_generic.html' %}
+
+{% block title %}Health Programs{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h2>Health Programs</h2>
+
+        <!-- List of programs displayed here -->
+        <a href="{% url 'frontend:create_health_program' %}" class="btn btn-primary mb-3">Create New Health Program</a>
+
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Program Name</th>
+                    <th scope="col">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for program in programs %}
+                    <tr>
+                        <th scope="row">{{ program.id }}</th>
+                        <td>{{ program.name }}</td>
+                        <td>
+                            <a href="#" class="btn btn-info btn-sm">Edit</a>
+                            <a href="#" class="btn btn-danger btn-sm">Delete</a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center">No health programs available.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
