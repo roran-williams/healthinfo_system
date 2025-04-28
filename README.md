@@ -67,8 +67,12 @@ To set up the project on your local machine, follow these steps:
     ```bash
     python manage.py createsuperuser
     ```
+6. **(Optional) There are two versions of this system, to use the api-first aproach version checkout to api-first-approach**:
+    ```bash
+    git checkout api-first-approach
+    ```
 
-6. **Run the Development Server**:
+7. **Run the Development Server**:
     ```bash
     python manage.py runserver
     ```
