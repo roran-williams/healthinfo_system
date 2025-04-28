@@ -69,7 +69,10 @@ To set up the project on your local machine, follow these steps:
     ```
 6. **(Optional) There are two versions of this system, to use the api-first aproach version checkout to api-first-approach**:
     ```bash
-    git checkout api-first-approach
+    git branch -r
+    ```
+    ```bash
+    git checkout <branch-name>
     ```
 
 7. **Run the Development Server**:
