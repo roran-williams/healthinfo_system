@@ -5,37 +5,77 @@
 
 {% block content %}
 <div class="container mt-5">
-    <h1>My Clients</h1>
+    <h1 class="mb-4">My Clients</h1>
 
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th scope="col">Name</th>
-            <th scope="col">Phone</th>
-            <th scope="col">Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for client in clients %}
-        <tr>
-            <td>{{ client.full_name }}</td>
-            <td>{{ client.contact }}</td>
-            <td>
-                <a class="btn btn-sm btn-primary" href="{% url 'frontend:edit_client' client.id %}"> <i class="bi bi-pencil"></i> Edit</a> |
-               <a class="btn btn-sm btn-danger" href="{% url 'frontend:delete_client' client.id %}"> <i class="bi bi-trash"></i>  Delete</a> |
-                <a class="btn btn-sm btn-dark" href="{% url 'frontend:client_detail' client.id %}"><i class="bi bi-eye"></i>View</a>
-            </td>
-        </tr>
-        {% empty %}
-        <tr>
-            <td colspan="4">No clients yet.</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+    <form method="GET" action="{% url 'frontend:client_list' %}" class="row g-2 mb-3 align-items-center">
+        <div class="col-md-8">
+            <input type="text" name="q" class="form-control" placeholder="Search by name or national ID..." value="{{ search_query }}">
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-sm btn-primary">
+                <i class="bi bi-search"></i> Search
+            </button>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'frontend:client_list' %}" class="btn btn-sm btn-secondary">
+                <i class="bi bi-arrow-counterclockwise"></i> Reset
+            </a>
+        </div>
+    </form>
 
+    <div class="text-center my-2" id="loading-spinner" style="display: none;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Searching...</span>
+        </div>
+        <div><small class="text-muted">Searching...</small></div>
+    </div>
 
-<a href="{% url 'frontend:register_client' %}">Register New Client</a>
+    <table class="table table-bordered table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Phone</th>
+                <th scope="col" class="text-center">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for client in clients %}
+                <tr>
+                    <td>{{ client.full_name }}</td>
+                    <td>{{ client.contact }}</td>
+                    <td class="text-center">
+                        <a class="btn btn-sm btn-dark" href="{% url 'frontend:client_detail' client.id %}">
+                            <i class="bi bi-eye"></i> View
+                        </a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="3" class="text-center">
+                        {% if search_query %}
+                            <div>No results found for "<strong>{{ search_query }}</strong>".</div>
+                        {% else %}
+                            No clients yet.
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
+    <div class="mt-4">
+        <a href="{% url 'frontend:register_client' %}" class="btn btn-success btn-sm">
+            <i class="bi bi-person-plus"></i> Register New Client
+        </a>
+    </div>
 </div>
+
+<script>
+    const form = document.querySelector('form');
+    const spinner = document.getElementById('loading-spinner');
+
+    form.addEventListener('submit', function() {
+        spinner.style.display = 'block'; // Show spinner when submitting
+    });
+</script>
 {% endblock %}

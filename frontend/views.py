@@ -1,231 +1,237 @@
 # frontend/views.py
-from pyexpat.errors import messages
-from django.http import HttpResponseForbidden
-from django.shortcuts import render, redirect, get_object_or_404
-from api.models import HealthProgram, Client, Enrollment
+from django.shortcuts import render, redirect
 from .forms import HealthProgramForm, ClientForm, EnrollmentForm
 from django.contrib.auth.decorators import login_required
-
 from django.shortcuts import render, redirect
-from django.contrib.auth import login, authenticate
-from django.contrib.auth.models import User
 from django.contrib import messages
-from django.core.mail import send_mail
-import random
-
-# views.py
-from django.contrib.auth.forms import PasswordChangeForm
-from django.contrib.auth import update_session_auth_hash
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
+from .api_client import api_request
+from django.core.exceptions import PermissionDenied
 
 
-
-from django.shortcuts import render, get_object_or_404, redirect
-from .forms import ClientForm  # Assuming you have a ClientForm
-
-from django.contrib.auth.decorators import login_required
+def admin_required(view_func):
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_staff:  # Only allow staff users
+            raise PermissionDenied
+        return view_func(request, *args, **kwargs)
+    return wrapper
 
 @login_required
-def edit_client(request, client_id):
-    client = get_object_or_404(Client, id=client_id, is_deleted=False)
-
-    # Only the creator can edit
-    if client.created_by != request.user:
-        return redirect('frontend:client_list')
-
+def register_client(request):
     if request.method == 'POST':
-        form = ClientForm(request.POST, instance=client)
+        form = ClientForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('frontend:client_list')
-    else:
-        form = ClientForm(instance=client)
+            data = form.cleaned_data
+            try:
+                token = request.user.auth_token.key
+            except Exception:
+                return redirect('frontend:get_token')
+            
+            response = api_request('post', 'clients/', data=data, token=token)
 
-    return render(request, 'frontend/edit_client.html', {'form': form})
+            if response and response.status_code == 201:
+                return redirect('frontend:client_list')
+            else:
+                form.add_error(None, 'Failed to register client. Please try again.')
+    else:
+        form = ClientForm()
+    return render(request, 'frontend/register_client.html', {'form': form})
 
 @login_required
-def delete_client(request, client_id):
-    client = get_object_or_404(Client, id=client_id, is_deleted=False)
+def enroll_client(request):
+   
+    # Get the API token for the current user
+    try:
+        token = request.user.auth_token.key
+    except Exception:
+        return redirect('frontend:get_token')
 
-    # Only the creator can delete
-    if client.created_by != request.user:
-        return redirect('frontend:client_list')
+    # Fetch clients and programs data from the API
+    try:
+        clients_response = api_request('get', 'clients/list/', token=token)
+        programs_response = api_request('get', 'healthprograms/', token=token)
 
-    if request.method == 'POST':
-        client.is_deleted = True
-        client.save()
-        return redirect('frontend:client_list')
-
-    return render(request, 'frontend/confirm_delete_client.html', {'client': client})
-
-# Temporary store OTPs in session (later you can make a model for security)
-def register(request):
-    if request.method == 'POST':
-        username = request.POST['username']
-        email = request.POST['email']
-        password = request.POST['password']
-        
-        if User.objects.filter(username=username).exists():
-            messages.error(request, 'Username already exists')
-            return redirect('register')
-        if User.objects.filter(email=email).exists():
-            messages.error(request, 'Email already exists')
-            return redirect('register')
-
-        user = User.objects.create_user(username=username, email=email, password=password)
-        user.is_active = False  # Deactivate account until email OTP is verified
-        user.save()
-
-        # Generate OTP
-        otp = str(random.randint(100000, 999999))
-        request.session['otp'] = otp
-        request.session['user_id'] = user.id
-
-        # Send OTP to user's email
-        send_mail(
-            'Your OTP Code',
-            f'Your verification code is {otp}',
-            'noreply@healthinfo.com',
-            [email],
-            fail_silently=False,
-        )
-
-        messages.success(request, 'We sent a verification code to your email')
-        return redirect('verify_otp')
-    return render(request, 'frontend/register.html')
-
-def verify_otp(request):
-    if request.method == 'POST':
-        entered_otp = request.POST['otp']
-        if entered_otp == request.session.get('otp'):
-            user_id = request.session.get('user_id')
-            user = User.objects.get(id=user_id)
-            user.is_active = True
-            user.save()
-
-            # Clear session
-            request.session.pop('otp')
-            request.session.pop('user_id')
-
-            messages.success(request, 'Your account has been verified! You can now log in.')
-            return redirect('login')
+        # If the response is successful, parse the JSON data
+        if clients_response.status_code == 200:
+            clients = clients_response.json()
         else:
-            messages.error(request, 'Invalid OTP')
-            return redirect('verify_otp')
-    return render(request, 'frontend/verify_otp.html')
+            clients = []
 
-# Health Program Views
+        if programs_response.status_code == 200:
+            programs = programs_response.json()
+        else:
+            programs = []
+
+    except Exception as e:
+        messages.error(request, f"Error fetching data: {str(e)}")
+        clients = []
+        programs = []
+
+    # Handle form submission
+    if request.method == 'POST':
+        form = EnrollmentForm(request.POST)
+        if form.is_valid():
+            client_id = form.cleaned_data['client'].id
+            program_id = form.cleaned_data['program'].id
+
+            # Prepare data to be sent to the API
+            data = {
+                'client': client_id,
+                'program': program_id,
+            }
+
+            # Send the data to the API
+            response = api_request('post', 'enroll/', data=data, token=token)
+            if response:
+                print(f"Response status: {response.status_code}")
+                print(f"Response text: {response.text}")
+            else:
+                print("API request returned None")
+            if response and response.status_code == 201:
+                messages.success(request, 'Client successfully enrolled in the program.')
+                return redirect('frontend:client_list')
+            else:
+                messages.error(request, f"Failed to enroll client. API response: {response.text}")
+        else:
+            messages.error(request, 'Invalid form submission.')
+
+    else:
+        form = EnrollmentForm()  # Initialize the form
+
+    return render(request, 'frontend/enroll_client.html', {
+        'form': form,
+        'clients': clients,
+        'programs': programs
+    })
+
+
+@login_required
+def client_detail(request, client_id):
+    # Define the token for authentication
+    try:
+        token = request.user.auth_token.key
+    except Exception:
+        return redirect('frontend:get_token')
+        
+    # Fetch client details from the API
+    client_response = api_request('get', f'clients/{client_id}', token=token)
+    
+    if not client_response or client_response.status_code != 200:
+        messages.error(request, "Failed to fetch client details.")
+        return redirect('frontend:client_list')  # Redirect to a fallback page
+    
+    client = client_response.json()  # Assuming the response contains JSON data
+    
+    # Fetch enrollments for the client from the API
+    enrollments_response = api_request('get', f'enrollments/?client={client_id}', token=token)
+    
+    if not enrollments_response or enrollments_response.status_code != 200:
+        messages.error(request, "Failed to fetch enrollments.")
+        enrollments = []  # Default to an empty list if enrollments fail to load
+    else:
+        enrollments = enrollments_response.json()  # Assuming the response contains JSON data
+    
+    # Render the template with the fetched data
+    return render(request, 'frontend/client_detail.html', {
+        'client': client,
+        'enrollments': enrollments
+    })
+
+@login_required
+def client_list(request):
+    try:
+        token = request.user.auth_token.key
+    except Exception:
+        return redirect('frontend:get_token')
+    
+    search_query = request.GET.get('q', '')  # Capture search term from query parameter
+
+    if search_query:
+        response = api_request('get', f'clients/list/?search={search_query}', token=token)
+    else:
+        response = api_request('get', 'clients/list/', token=token)
+
+    if response and response.status_code == 200:
+        clients = response.json()
+
+    else:
+        clients = []
+
+    return render(request, 'frontend/client_list.html', {'clients': clients, 'search_query': search_query})
+
+
+@admin_required
 @login_required
 def create_health_program(request):
     if request.method == 'POST':
         form = HealthProgramForm(request.POST)
         if form.is_valid():
-            program = form.save(commit=False)
-            program.created_by = request.user
-            program.save()
-            messages.success(request, 'Program created successfully!')
-            return redirect('frontend:health_program_list')
+            data = form.cleaned_data
+            try:
+                token = request.user.auth_token.key
+            except Exception:
+                return redirect('frontend:get_token')
+
+            response = api_request('post', 'programs/', data=data, token=token)
+
+            if response and response.status_code == 201:
+                return redirect('frontend:health_program_list')
+            else:
+                form.add_error(None, 'Failed to create health program. Please try again.')
     else:
         form = HealthProgramForm()
     return render(request, 'frontend/create_health_program.html', {'form': form})
 
 @login_required
 def health_program_list(request):
-    programs = HealthProgram.objects.filter(is_deleted=False)
+    try:
+        token = request.user.auth_token.key
+    except Exception:
+        return redirect('frontend:get_token')
+
+    response = api_request('get', 'healthprograms/', token=token)
+
+    if response and response.status_code == 200:
+        programs = response.json()
+    else:
+        programs = []
+
     return render(request, 'frontend/health_program_list.html', {'programs': programs})
 
+
 @login_required
-def edit_health_program(request, program_id):
-    program = get_object_or_404(HealthProgram, pk=program_id, is_deleted=False)
-
-    if program.created_by != request.user:
-        return HttpResponseForbidden("You are not allowed to edit this program.")
-
+def get_token(request):
     if request.method == 'POST':
-        form = HealthProgramForm(request.POST, instance=program)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Program updated successfully!")
+       username = request.POST['username']
+       password = request.POST['password']
+       data = {
+                'username': username,
+                'password': password,
+            }
+       response = api_request('post', 'login/', data=data)
+       if response and response.status_code == 200:
             return redirect('frontend:health_program_list')
+            
+       else:
+            messages.error(request, 'login failed')
+       
+    return render(request, 'frontend/api_login.html')
+
+@login_required
+def logout(request):
+    try:
+        token = request.user.auth_token.key
+    except Exception:
+        return redirect('/login/')
+
+    if token:
+        response = api_request('post', 'logout/' ,token=token)
     else:
-        form = HealthProgramForm(instance=program)
+        response=None
+
+    if response and response.status_code == 200:
+        return redirect('/logout')
+    else:
+        messages.error(request,"logout failed")
     
-    return render(request, 'frontend/edit_health_program.html', {'form': form})
+    return render(request, 'frontend/logout.html')
 
-@login_required
-def delete_health_program(request, program_id):
-    program = get_object_or_404(HealthProgram, pk=program_id, is_deleted=False)
-
-    if program.created_by != request.user:
-        return HttpResponseForbidden("You are not allowed to delete this program.")
-
-    if request.method == 'POST':
-        program.is_deleted = True
-        program.save()
-        messages.success(request, "Program deleted successfully!")
-        return redirect('frontend:health_program_list')
-
-    return render(request, 'frontend/confirm_delete_program.html', {'program': program})
-
-# Client Views
-@login_required
-def register_client(request):
-    if request.method == 'POST':
-        form = ClientForm(request.POST)
-        if form.is_valid():
-            client = form.save(commit=False)
-            client.created_by = request.user  # 🛠️ Set the creator
-            client.save()
-            return redirect('frontend:client_list')
-    else:
-        form = ClientForm()
-    return render(request, 'frontend/register_client.html', {'form': form})
-
-@login_required
-def client_list(request):
-    clients = Client.objects.filter(created_by=request.user, is_deleted=False)
-    return render(request, 'frontend/client_list.html', {'clients': clients})
-
-@login_required
-def client_detail(request, client_id):
-    client = get_object_or_404(Client, id=client_id)
-    enrollments = Enrollment.objects.filter(client=client)
-    return render(request, 'frontend/client_detail.html', {'client': client, 'enrollments': enrollments})
-
-# Enrollment Views
-@login_required
-def enroll_client(request):
-    clients = Client.objects.filter(created_by=request.user, is_deleted=False)
-    programs = HealthProgram.objects.filter(created_by=request.user, is_deleted=False)
-
-    if request.method == 'POST':
-        form = EnrollmentForm(request.POST)
-        if form.is_valid():
-            enrollment = form.save(commit=False)
-            enrollment.enrolled_by = request.user
-            form.save()
-            messages.success(request,'client succesfully enrolled')
-            return redirect('frontend:client_list')
-        else:
-            messages.error(request,'is the client already registered on that program?')
-            return redirect('frontend:enroll_client')
-    else:
-        form = EnrollmentForm()
-    return render(request, 'frontend/enroll_client.html', {'form': form, 'clients':clients, 'programs':programs})
-
-@login_required
-def un_enroll_client(request, enrollment_id):
-    enrollment = get_object_or_404(Enrollment, id=enrollment_id)
-
-    # Only the creator can delete
-    if enrollment.enrolled_by != request.user:
-        messages.error(request,'you cant un-enroll')
-        return redirect('frontend:client_list')
-
-    if request.method == 'POST':
-        enrollment.delete()
-        messages.success(request,'done')
-        return redirect('frontend:client_list')
-
-    return render(request, 'frontend/confirm_un_enroll_client.html', {'enrollment': enrollment})

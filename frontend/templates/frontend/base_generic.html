@@ -12,7 +12,7 @@
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 
-    <!-- Optional: Custom CSS -->
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
 <body>
@@ -29,14 +29,21 @@
             <div class="collapse navbar-collapse justify-content-between" id="navbarNav">
                 <ul class="navbar-nav">
                     <li class="nav-item"><a class="nav-link" href="{% url 'frontend:health_program_list' %}"><i class="bi bi-list-ul"></i> Programs</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'frontend:create_health_program' %}"><i class="bi bi-plus-circle"></i> Create Program</a></li>
+                    {% if user.is_staff %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'frontend:create_health_program' %}">
+                            <i class="bi bi-plus-circle"></i>
+                             Create Program
+                        </a>
+                    </li>
+                    {% endif %}
                     <li class="nav-item"><a class="nav-link" href="{% url 'frontend:register_client' %}"><i class="bi bi-person-plus"></i> Register Client</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'frontend:client_list' %}"><i class="bi bi-people"></i> Clients</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'frontend:enroll_client' %}"><i class="bi bi-pencil-square"></i> Enroll Client</a></li>
 
                     {% if user.is_authenticated %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'logout' %}" onclick="confirm('are you sure you want to logout?')"><i class="bi bi-box-arrow-right"></i> Logout</a>
+                            <a class="nav-link" href="{% url 'frontend:logout' %}" onclick="confirm('are you sure you want to logout?')"><i class="bi bi-box-arrow-right"></i> Logout</a>
                         </li>
                     {% else %}
                         <li class="nav-item">
@@ -71,7 +78,7 @@
     </div>
 
     <!-- Footer -->
-    <footer class="bg-dark text-white text-center py-3 ">
+    <footer class="bg-dark text-white text-center py-3 sticky-bottom">
         <div class="container">
             <small>&copy; 2025 HealthInfo System. All rights reserved.</small>
         </div>

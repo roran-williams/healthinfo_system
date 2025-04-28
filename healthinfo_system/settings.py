@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from pathlib import Path
 LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'frontend:health_program_list'
+LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = 'login'
 
 # Email settings
@@ -24,6 +24,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+API_BASE_URL = 'http://127.0.0.1:8000/api/'  # Or your production URL later
 
 
 # Quick-start development settings - unsuitable for production

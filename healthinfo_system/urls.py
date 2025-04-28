@@ -20,14 +20,16 @@ from django.urls import path, include
 
 from django.contrib.auth import views as auth_views
 from frontend import views as frontend_views  # assuming your custom registration view is in frontend
+from api import views as api_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('api.urls')),
     path('frontend/', include('frontend.urls')),
+    path('', include('frontend.urls')),
 
     # Auth
-    path('register/', frontend_views.register, name='register'),
+    path('register/', api_views.register, name='register'),
     path('login/', auth_views.LoginView.as_view(template_name='frontend/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
 
@@ -38,6 +40,6 @@ urlpatterns = [
     path('reset/done/', auth_views.PasswordResetCompleteView.as_view(template_name='frontend/password_reset_complete.html'), name='password_reset_complete'),
 
     # Email OTP verification
-    path('verify-otp/', frontend_views.verify_otp, name='verify_otp'),
+    path('verify-otp/', api_views.verify_otp, name='verify_otp'),
 ]
 

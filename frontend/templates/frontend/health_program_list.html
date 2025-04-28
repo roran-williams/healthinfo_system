@@ -5,9 +5,9 @@
 {% block content %}
     <div class="container">
         <h2>Health Programs</h2>
-
+        {% if user.is_staff %}
         <a href="{% url 'frontend:create_health_program' %}" class="btn btn-primary mb-3">Create New Health Program</a>
-        
+        {% endif %}
         <!-- List of programs displayed here -->
         <table class="table table-bordered">
             <thead>
@@ -16,7 +16,6 @@
                     <th scope="col">Program Name</th>
                     <th scope="col">Description</th>
                     <th scope="col">Created On</th>
-                    <th scope="col">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -26,16 +25,6 @@
                     <td>{{ program.name }}</td>
                     <td>{{ program.description }}</td>
                     <td>{{ program.date_created }}</td>
-                    <td>
-                        {% if program.created_by == user %}
-                            <a href="{% url 'frontend:edit_health_program' program.id %}" class="btn btn-sm btn-primary">
-                                <i class="bi bi-pencil"></i> Edit
-                            </a>
-                            <a href="{% url 'frontend:delete_health_program' program.id %}" class="btn btn-sm btn-danger">
-                                <i class="bi bi-trash"></i> Delete
-                            </a>
-                        {% endif %}
-                    </td>
                 </tr>
                 {% empty %}
                     <tr>

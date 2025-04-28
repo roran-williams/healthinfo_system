@@ -11,7 +11,6 @@ class HealthProgramForm(forms.ModelForm):
             'description': forms.Textarea(attrs={'rows': 3,'class':'form-control'}),
         }
 
-
 class ClientForm(forms.ModelForm):
     class Meta:
         model = Client
@@ -21,3 +20,5 @@ class EnrollmentForm(forms.ModelForm):
     class Meta:
         model = Enrollment
         fields = ['client', 'program']
+
+
